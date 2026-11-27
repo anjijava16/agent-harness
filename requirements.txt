@@ -1,0 +1,3 @@
+# Mock mode needs nothing beyond the standard library. These are for tests and .env loading.
+pytest>=8
+python-dotenv>=1.0

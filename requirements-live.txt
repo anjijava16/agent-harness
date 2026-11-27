@@ -1,0 +1,18 @@
+# Install only what you need for the services you want to run with --live.
+# Versions are the ones this repo was checked against in Nov 2026.
+
+openai>=1.100          # pa_core OpenAICompatLLM, OpenClaw gateway, Perplexity/xAI compat
+requests>=2.31         # Manus, Devin REST clients
+
+xai-sdk>=1.21          # s01 Grok Bot
+cursor-sdk>=1.5        # s01 (optional handoff), s15 Cursor
+openai-agents>=0.26    # s02 dots build-alike
+claude-agent-sdk>=0.2  # s03 Claude Duet build-alike, s18 Claude Agent SDK
+google-adk>=1.1        # s04 Gemini Task build-alike, s20 Google ADK
+perplexityai>=0.50     # s10 Personal Computer (Agent API)
+mcp>=1.9               # s13 Genspark remote MCP
+httpx>=0.27            # s13
+playwright>=1.45       # s14 Comet build-alike (then: playwright install chromium)
+openai-codex>=0.1      # s17 Codex SDK
+deepagents>=0.7        # s19 Deep Agents
+langgraph>=0.6         # s19

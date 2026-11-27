@@ -1,0 +1,9 @@
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[project]
+name = "personal-agents-deep-dive"
+version = "1.0.0"
+requires-python = ">=3.10"
+description = "Deep dive into autonomous personal AI agents, with runnable Python examples"
