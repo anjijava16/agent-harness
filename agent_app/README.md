@@ -15,6 +15,11 @@ User  ->  UI (one HTML page)  ->  FastAPI  ->  the framework the user prefers
                                      +-- Redis
 ```
 
+There's also a live project in the same app: **[real-time order tracking](usecases/order_tracking/README.md)**
+at `/orders`. It has three kinds of agent (harness, looping, graph), and each runs on six runtimes: LangChain,
+LangGraph, Deep Agents, Google ADK, ADK Workflows and the Claude Agent SDK. A simulated carrier feed streams
+through Redis to the browser over Server-Sent Events.
+
 Everything runs offline with no API keys in **scripted** mode. Only the model's decisions are scripted;
 the framework, approvals, tools, database and Redis are all real. Switch a user to **live** mode and a real
 model makes the decisions instead.
@@ -24,6 +29,7 @@ What I checked before shipping:
 | Check | Result |
 |---|---|
 | 200 use cases x 4 frameworks, SQLite + in-process Redis | 800/800 |
+| Live order tracking: 3 agent types x 6 runtimes, plus API, SSE and two agents on one stream | 23 tests, also on Postgres and MariaDB |
 | Same suite on **Postgres 16** + real Redis 7 | 819 tests passed |
 | Same suite on **MariaDB 10.11** (the MySQL driver path) + real Redis | 819 tests passed |
 | API flows: approve / edit / reject over HTTP on each framework, guards reading preferences, memory shared across frameworks, background runs, rate limit | passing |
@@ -54,7 +60,7 @@ Without the UI:
 python usecases/048_move_money_to_savings/usecase.py --all       # one use case on all four frameworks
 python usecases/048_move_money_to_savings/usecase.py --manual    # you answer the approval in the terminal
 python scripts/run_all.py                                        # all 800 runs, summary table
-python -m pytest -q                                              # 819 tests
+python -m pytest -q                                              # 842 tests
 ```
 
 ## Architecture
@@ -335,6 +341,7 @@ agent_app/
       deepagents_rt.py  langgraph_rt.py  adk_rt.py  claude_rt.py  lc_common.py  base.py
   ui/index.html         the whole UI, no build step
   usecases/             200 folders, one per use case, + README.md catalogue
+    order_tracking/     live project: 3 agent types x 6 runtimes, SSE, Redis streams (own README)
   scripts/              run_all.py, gen_readmes.py
   tests/                test_usecases.py (800 runs), test_api.py
   Dockerfile  docker-compose.yml  requirements.txt  .env.example  Makefile

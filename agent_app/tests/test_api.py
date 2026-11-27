@@ -64,6 +64,7 @@ def test_manual_reject_and_parallel_approvals(client, fw):
 def test_guard_uses_preferences(client, fw):
     """#56: the laptop is blocked at the default $200 limit, and bought once the user raises it."""
     uid = "g-" + fw
+    client.put(f"/api/users/{uid}/preferences", json={"max_purchase_without_review": 200})   # databases persist between runs
     r = client.post("/api/runs", json={"user_id": uid, "usecase_id": 56, "framework": fw, "auto_approve": True}).json()
     assert [c["status"] for c in r["tool_calls"] if c["tool"] == "checkout"] == ["blocked"]
     client.put(f"/api/users/{uid}/preferences", json={"max_purchase_without_review": 2000})

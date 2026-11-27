@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Live order tracking</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#1d1d1b; --muted:#6b6a66; --line:#e4e2dc; --accent:#2f5d50; --warn:#a4542a; --bad:#a33; --ok:#2f6b3a; --blue:#2c5a8a; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; flex-wrap:wrap; gap:12px; align-items:center; padding:10px 18px; border-bottom:1px solid var(--line); background:var(--card); }
+  header h1 { font-size:16px; margin:0 8px 0 0; }
+  .pills { display:flex; flex-wrap:wrap; gap:4px; }
+  .pills button, button.sec { border:1px solid var(--line); background:#fff; padding:5px 10px; border-radius:999px; cursor:pointer; font:inherit; }
+  .pills button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.main { background:var(--accent); color:#fff; border:0; padding:7px 13px; border-radius:6px; cursor:pointer; font-weight:600; font:inherit; }
+  button.sec { border-radius:6px; }
+  .muted { color:var(--muted); } .small { font-size:12px; }
+  main { display:grid; grid-template-columns: 1.05fr 1.25fr 0.95fr; gap:12px; padding:12px; height:calc(100vh - 56px); }
+  .col { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; overflow:auto; }
+  h2 { font-size:14px; margin:0 0 8px; }
+  table { width:100%; border-collapse:collapse; } td, th { text-align:left; padding:5px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12px; color:var(--muted); font-weight:600; }
+  tr.o { cursor:pointer; } tr.o:hover { background:#f3f2ee; }
+  tr.flash { animation: flash 1.2s ease-out; } @keyframes flash { from { background:#fff3c4; } to { background:transparent; } }
+  .chip { display:inline-block; padding:1px 7px; border-radius:999px; font-size:11px; background:#eeece6; white-space:nowrap; }
+  .chip.delivered,.chip.reshipped { background:#e1f0e3; color:var(--ok); } .chip.out_for_delivery { background:#e4edf7; color:var(--blue); }
+  .chip.delayed,.chip.exception { background:#fbe9dd; color:var(--warn); } .chip.lost,.chip.damaged { background:#f6dcdc; color:var(--bad); }
+  .late { color:var(--warn); font-size:11px; }
+  .tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:10px; }
+  .tabs button { border:0; background:none; padding:7px 10px; cursor:pointer; font:inherit; border-bottom:2px solid transparent; color:var(--muted); }
+  .tabs button.on { border-color:var(--accent); color:var(--ink); font-weight:600; }
+  .tab { display:none; } .tab.on { display:block; }
+  textarea, input, select { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  textarea { width:100%; }
+  .answer { background:#f3f7f5; border-left:3px solid var(--accent); padding:8px 10px; margin:10px 0; white-space:pre-wrap; }
+  .steps div { font-size:12px; padding:2px 0; border-bottom:1px dashed var(--line); }
+  code { font-family: ui-monospace, Menlo, monospace; font-size:12px; }
+  .path { display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin:6px 0; }
+  .path span { background:#eef3f1; border:1px solid #cfe0d9; border-radius:4px; padding:1px 6px; font-size:12px; }
+  .path i { color:var(--muted); font-style:normal; }
+  .feed div { font-size:12px; padding:3px 0; border-bottom:1px solid var(--line); }
+  .feed .scan b { color:var(--blue); } .feed .act b { color:var(--accent); } .feed .appr b { color:var(--warn); }
+  .appr-card { border:1px solid #e8c6ae; background:#fff8f3; border-radius:8px; padding:8px; margin-bottom:6px; font-size:13px; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .quick button { font-size:12px; }
+  .ev { display:flex; justify-content:space-between; gap:6px; align-items:center; font-size:12px; padding:4px 0; border-bottom:1px solid var(--line); }
+  @media (max-width: 1200px) { main { grid-template-columns: 1fr; height:auto; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Live order tracking</h1>
+  <div class="pills" id="rt"></div>
+  <div class="pills" id="mode"><button data-m="scripted" class="on">scripted</button><button data-m="live">live model</button></div>
+  <div class="row">
+    <button class="sec" id="simBtn" onclick="toggleSim()">Start carrier feed</button>
+    <button class="sec" onclick="post('/api/ot/sim/tick')">One tick</button>
+    <button class="sec" onclick="resetAll()">Reset</button>
+  </div>
+  <span class="small muted" id="infra"></span>
+  <a href="/" style="margin-left:auto;color:var(--accent)">&larr; Personal agent</a>
+</header>
+<main>
+  <section class="col">
+    <h2>Orders <span class="small muted" id="today"></span></h2>
+    <table><thead><tr><th>#</th><th>Customer</th><th>Status</th><th>ETA</th></tr></thead><tbody id="orders"></tbody></table>
+    <h2 style="margin-top:14px">Tickets <span class="muted small" id="tcount"></span></h2>
+    <div id="tickets" class="small"></div>
+  </section>
+
+  <section class="col">
+    <div class="tabs">
+      <button data-t="harness" class="on">Harness agent</button>
+      <button data-t="looping">Looping agent</button>
+      <button data-t="graph">Graph agent</button>
+    </div>
+
+    <div class="tab on" id="tab-harness">
+      <p class="small muted">One agent with tools that plans and acts until the job's done. Ask a question or hand it a problem. Click an order to ask about it.</p>
+      <textarea id="ask" rows="2">Where is order 1003?</textarea>
+      <div class="row quick" style="margin:6px 0">
+        <button class="main" onclick="askHarness()">Ask</button>
+        <button class="sec" onclick="setAsk('Which orders have problems?')">Which orders have problems?</button>
+        <button class="sec" onclick="setAsk('Is order 1001 delivered?')">Is 1001 delivered?</button>
+      </div>
+      <div id="harnessOut"></div>
+    </div>
+
+    <div class="tab" id="tab-looping">
+      <p class="small muted">Runs continuously: reads new carrier scans from the Redis stream, decides and acts, then waits and repeats. Start the carrier feed so it has something to watch.</p>
+      <div class="row"><label class="small">Poll every <input id="loopInt" type="number" value="2" min="0.2" step="0.2" style="width:70px"> s</label>
+        <button class="main" onclick="startLoop()">Start on <span class="rtname"></span></button>
+        <button class="sec" onclick="stopLoop()">Stop</button></div>
+      <div id="loopStatus" class="small muted" style="margin:8px 0"></div>
+      <h2>Iterations</h2><div id="iterations" class="feed"></div>
+    </div>
+
+    <div class="tab" id="tab-graph">
+      <p class="small muted">A fixed workflow per carrier event: load, classify (model), route, act, draft (model), notify. Code decides the path; the model only fills in judgment.</p>
+      <div class="row"><button class="main" onclick="startAuto()">Auto-run on new events (<span class="rtname"></span>)</button><button class="sec" onclick="stopAuto()">Stop auto</button></div>
+      <div id="graphOut" style="margin:8px 0"></div>
+      <h2>Events that need action</h2><div id="events"></div>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2>Waiting for you <span class="muted small" id="acount"></span></h2>
+    <div id="approvals"></div>
+    <h2 style="margin-top:12px">Live feed</h2>
+    <div id="feed" class="feed"></div>
+  </section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const api = async (path, opts={}) => { const r = await fetch(path, {headers:{'content-type':'application/json'}, ...opts});
+  const b = await r.json().catch(() => ({})); if (!r.ok) throw new Error(b.detail || r.statusText); return b; };
+const post = (path, body) => api(path, {method:'POST', body: JSON.stringify(body || {})});
+let S = { runtime:'langgraph', mode:'scripted', labels:{}, prevStatus:{} , running:{} };
+
+async function boot() {
+  const m = await api('/api/ot/meta');
+  m.runtimes.forEach(r => S.labels[r.id] = r.label);
+  $('#infra').textContent = `db: ${m.database} · ${m.redis}`;
+  $('#rt').innerHTML = m.runtimes.map(r => `<button data-r="${r.id}">${esc(r.label)}</button>`).join('');
+  $('#rt').onclick = e => { if (e.target.dataset.r) { S.runtime = e.target.dataset.r; paintPills(); } };
+  $('#mode').onclick = e => { if (e.target.dataset.m) { S.mode = e.target.dataset.m; paintPills(); } };
+  document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.id === 'tab-' + b.dataset.t)); });
+  paintPills(); refresh(); loadEvents(); listen();
+}
+function paintPills() {
+  document.querySelectorAll('#rt button').forEach(b => b.classList.toggle('on', b.dataset.r === S.runtime));
+  document.querySelectorAll('#mode button').forEach(b => b.classList.toggle('on', b.dataset.m === S.mode));
+  document.querySelectorAll('.rtname').forEach(x => x.textContent = S.labels[S.runtime]);
+}
+
+let refreshTimer = null;
+function soon() { clearTimeout(refreshTimer); refreshTimer = setTimeout(() => { refresh(); loadEvents(); }, 300); }
+
+async function refresh() {
+  const st = await api('/api/ot/state');
+  S.running = st.running;
+  $('#today').textContent = 'today ' + st.today;
+  $('#orders').innerHTML = st.orders.map(o => {
+    const changed = S.prevStatus[o.order_id] && S.prevStatus[o.order_id] !== o.status;
+    S.prevStatus[o.order_id] = o.status;
+    return `<tr class="o ${changed ? 'flash' : ''}" onclick="setAsk('Where is order ${o.order_id}?')"><td>${o.order_id}</td>
+      <td>${esc(o.customer)}<div class="small muted">${esc(o.items)} · ${o.carrier.toUpperCase()}</div></td>
+      <td><span class="chip ${o.status}">${o.status.replace(/_/g,' ')}</span></td>
+      <td class="small">${o.eta.slice(5)}${o.days_late ? `<div class="late">${o.days_late}d late</div>` : ''}</td></tr>`; }).join('');
+  const pend = st.approvals.filter(a => a.status === 'pending');
+  $('#acount').textContent = pend.length ? `(${pend.length})` : '';
+  $('#approvals').innerHTML = pend.map(a => `<div class="appr-card"><b>${a.action === 'credit' ? '$' + a.args.amount.toFixed(2) + ' credit' : 'Reship'}</b> for #${a.order_id}
+      <div class="small muted">${esc(a.reason)} · asked by ${esc(a.by)}</div>
+      <div class="row" style="margin-top:4px"><button class="main" onclick="decide(${a.id}, true)">Approve</button><button class="sec" onclick="decide(${a.id}, false)">Reject</button></div></div>`).join('')
+      || '<p class="small muted">Nothing waiting. Credits and reships requested by agents land here.</p>';
+  $('#tcount').textContent = `(${st.tickets.length}) · ${st.notifications.length} customer emails sent`;
+  $('#tickets').innerHTML = st.tickets.map(t => `<div>#${t.order_id} <span class="chip ${t.priority === 'high' ? 'lost' : ''}">${t.priority}</span> ${esc(t.reason)} <span class="muted">by ${esc(t.by)}</span></div>`).join('') || '<span class="muted">None yet.</span>';
+  $('#simBtn').textContent = st.running.sim ? 'Pause carrier feed' : 'Start carrier feed';
+  const loops = Object.entries(st.running).filter(([k, v]) => v && k.startsWith('looping:')).map(([k]) => S.labels[k.split(':')[1]]);
+  const autos = Object.entries(st.running).filter(([k, v]) => v && k.startsWith('graph:')).map(([k]) => S.labels[k.split(':')[1]]);
+  $('#loopStatus').textContent = loops.length ? 'Running on: ' + loops.join(', ') : 'Not running.';
+  if (autos.length) $('#graphOut').innerHTML = `<p class="small">Auto-running on: ${autos.join(', ')}</p>` + ($('#graphOut').dataset.last || '');
+}
+
+async function loadEvents() {
+  const evs = (await api('/api/ot/events?limit=80')).filter(e => e.actionable).slice(0, 25);
+  $('#events').innerHTML = evs.map(e => `<div class="ev"><span>#${e.order_id} <span class="chip">${e.code.replace(/_/g,' ')}</span> <span class="muted">${esc(e.location)}</span></span>
+    <button class="sec" onclick="runGraph(${e.event_id})">Run graph</button></div>`).join('') || '<p class="small muted">No actionable events yet. Start the carrier feed.</p>';
+}
+
+function setAsk(t) { $('#ask').value = t; document.querySelector('.tabs button[data-t=harness]').click(); }
+
+function stepsHtml(run) {
+  return `<div class="steps">${run.steps.filter(s => s.kind === 'tool' || s.kind === 'node').map(s =>
+    `<div><code>${esc(s.name)}</code> ${s.kind === 'tool' ? `<span class="muted">${esc(JSON.stringify(s.args)).slice(0, 110)}</span>` : ''} ${s.status !== 'ok' ? `<b>${s.status}</b>` : ''}</div>`).join('')}</div>`;
+}
+
+async function askHarness() {
+  $('#harnessOut').innerHTML = '<p class="muted">Working…</p>';
+  try { const r = await post('/api/ot/harness', {runtime: S.runtime, mode: S.mode, ask: $('#ask').value});
+    $('#harnessOut').innerHTML = `<div class="answer">${esc(r.answer)}</div><div class="small muted">${S.labels[S.runtime]} · run ${r.run_id} · ${r.run.steps.length} steps</div>` + stepsHtml(r.run);
+  } catch (e) { $('#harnessOut').innerHTML = `<p style="color:var(--bad)">${esc(e.message)}</p>`; }
+  soon();
+}
+
+async function runGraph(id) {
+  $('#graphOut').innerHTML = '<p class="muted">Running…</p>';
+  try { const r = await post('/api/ot/graph/run', {runtime: S.runtime, mode: S.mode, event_id: id});
+    const html = r.status === 'skipped' ? `<p class="small">${esc(r.summary)}</p>` :
+      `<div class="path">${(r.path || []).map(p => `<span>${esc(p)}</span>`).join('<i>→</i>')}</div><div class="answer">${esc(r.summary)}</div>` + (r.run ? stepsHtml(r.run) : '');
+    $('#graphOut').innerHTML = html; $('#graphOut').dataset.last = html;
+  } catch (e) { $('#graphOut').innerHTML = `<p style="color:var(--bad)">${esc(e.message)}</p>`; }
+  soon();
+}
+
+async function startLoop() { try { await post('/api/ot/looping/start', {runtime: S.runtime, mode: S.mode, interval: +$('#loopInt').value}); } catch (e) { alert(e.message); } soon(); }
+async function stopLoop() { await post('/api/ot/looping/stop?runtime=' + S.runtime); soon(); }
+async function startAuto() { try { await post('/api/ot/graph/auto/start', {runtime: S.runtime, mode: S.mode}); } catch (e) { alert(e.message); } soon(); }
+async function stopAuto() { await post('/api/ot/graph/auto/stop?runtime=' + S.runtime); soon(); }
+async function toggleSim() { await post(S.running.sim ? '/api/ot/sim/stop' : '/api/ot/sim/start', {interval: 2}); soon(); }
+async function resetAll() { await post('/api/ot/reset'); $('#feed').innerHTML = ''; $('#iterations').innerHTML = ''; $('#harnessOut').innerHTML = ''; $('#graphOut').innerHTML = ''; S.prevStatus = {}; soon(); }
+async function decide(id, approve) { await post(`/api/ot/approvals/${id}`, {approve}); soon(); }
+
+function feed(html, cls) {
+  const f = $('#feed'); f.insertAdjacentHTML('afterbegin', `<div class="${cls}">${html}</div>`);
+  while (f.children.length > 150) f.lastChild.remove();
+}
+function listen() {
+  const es = new EventSource('/api/ot/stream');
+  es.addEventListener('scan', m => { const e = JSON.parse(m.data);
+    feed(`<b>scan</b> #${e.order_id} ${esc(e.code.replace(/_/g,' '))} <span class="muted">${esc(e.location)}</span>`, 'scan'); soon(); });
+  es.addEventListener('activity', m => { const a = JSON.parse(m.data), who = `${a.agent || ''}/${S.labels[a.runtime] || a.runtime || ''}`;
+    if (a.kind === 'tool') feed(`<b>${esc(who)}</b> <code>${esc(a.name)}</code> ${a.args.order_id ? '#' + a.args.order_id : ''} ${a.status !== 'ok' ? `<i>${a.status}</i>` : ''}`, 'act');
+    else if (a.kind === 'approval') feed(`<b>approval needed</b> ${a.action} for #${a.order_id} <span class="muted">(${esc(a.by)})</span>`, 'appr');
+    else if (a.kind === 'approval_decided') feed(`<b>${a.approved ? 'approved' : 'rejected'}</b> ${a.action} for #${a.order_id}`, 'appr');
+    else if (a.kind === 'iteration') $('#iterations').insertAdjacentHTML('afterbegin', `<div><b>${esc(S.labels[a.runtime])}</b> ${esc(a.name)} (${esc(String(a.args.events))} scans): ${esc(a.summary || '')}</div>`);
+    else if (a.kind === 'run_end') { feed(`<b>${esc(who)}</b> finished: ${esc(a.summary)}`, 'act'); }
+    if (a.kind !== 'node') soon(); });
+}
+boot();
+</script>
+</body>
+</html>

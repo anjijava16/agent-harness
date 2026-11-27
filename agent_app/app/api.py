@@ -32,6 +32,11 @@ async def lifespan(_: FastAPI):  # noqa: ANN201
 
 app = FastAPI(title="Personal agent app", version="1.0", lifespan=lifespan)
 
+# Live order tracking (usecases/order_tracking): same server, page at /orders, API under /api/ot
+from usecases.order_tracking.api import router as order_tracking_router  # noqa: E402
+
+app.include_router(order_tracking_router)
+
 
 class RunIn(BaseModel):
     user_id: str = "sam"

@@ -103,6 +103,8 @@ def catalogue(ucs) -> str:  # noqa: ANN001
            "Everything Sam Rivera might hand to a personal agent in a year, from the morning brief to filing taxes. "
            "Each folder has a `usecase.py` (a framework-neutral spec) and a README with the flow. The same spec runs on "
            "LangChain Deep Agents, LangGraph, Google ADK or the Claude Agent SDK, whichever the user picked.", "",
+           "There's also a live project in [order_tracking/](order_tracking/README.md): real-time order tracking with "
+           "harness, looping and graph agents on six runtimes.", "",
            "Features used: " + ", ".join(f"{k} ({v})" for k, v in feats.most_common()) + ".", ""]
     by = collections.defaultdict(list)
     for u in ucs:

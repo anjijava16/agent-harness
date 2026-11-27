@@ -2,6 +2,8 @@
 
 Everything Sam Rivera might hand to a personal agent in a year, from the morning brief to filing taxes. Each folder has a `usecase.py` (a framework-neutral spec) and a README with the flow. The same spec runs on LangChain Deep Agents, LangGraph, Google ADK or the Claude Agent SDK, whichever the user picked.
 
+There's also a live project in [order_tracking/](order_tracking/README.md): real-time order tracking with harness, looping and graph agents on six runtimes.
+
 Features used: approval (75), parallel calls (73), memory (58), uses preferences (48), guard (17).
 
 ## Mornings and daily planning (1-20)
