@@ -9,7 +9,10 @@ This is the second edition of the repo. The first edition (`README.md`) covers t
    * **Deep Agents 0.7** (5): subagents, HITL, backends and long-term memory, skills and AGENTS.md, todos and custom middleware
    * **Google ADK** (5): agents, tools, state, callbacks, `sub_agents`, classic workflow agents, `AgentTool`, MCP
    * **Google ADK 2.0 Workflows** (7): graph routing, fan-out/join, durable HITL, dynamic nodes, retries, single-turn agent nodes, confirmations, and an end-to-end refund use case
-3. **Corrections** found while checking the current libraries:
+3. **100 use cases on the Deep Agents harness** ([usecases/](usecases/README.md)), ten each across finance, engineering, support, sales and marketing, research, data, HR, ops/IT, legal and personal-agent work. Each is a real `create_deep_agent` run with subagents, HITL, guardrails, skills, memory, todos or structured output, checked automatically (`python usecases/run.py --all` -> 100/100).
+4. **A software engineer's day, 100 more use cases, one folder each** ([usecases/swe_day/](usecases/swe_day/README.md)). They run from 06:30 to midnight: morning digests, planning, coding, review, incidents, releases and overnight jobs. Most are triggered by cron or a webhook, and each folder has its own `usecase.py` and a README with a flow diagram (`python usecases/swe_day/run_day.py` -> 100/100).
+5. **A personal agent app with 200 use cases** ([agent_app/](agent_app/README.md)). A simple UI talks to FastAPI, which runs each request on the framework the user prefers: LangChain Deep Agents, LangGraph, Google ADK or the Claude Agent SDK. Each one uses its own human-approval mechanism. Data lives in SQLite, Postgres or MySQL, with Redis for caching, rate limits and approval hand-off. There are 200 use cases from one person's life, one folder each, and all 800 framework runs pass.
+4. **Corrections** found while checking the current libraries:
    * Gemini Task runs on Antigravity, not ADK ([Understand.md](Understand.md)).
    * Deep Agents 0.7 removed the todo planner from its default harness.
    * ADK 2.x deprecates `SequentialAgent`/`ParallelAgent`/`LoopAgent` in favor of `Workflow`.
@@ -75,6 +78,9 @@ personal-agents-deep-dive/
 ├── harness_agents/
 │   ├── README.md                  8 platforms + open-source harnesses
 │   └── examples/                  pi_style_minimal_harness.py, drive_headless_harnesses.py, openhands_sdk_example.py
+├── usecases/                      100 Deep Agents use cases: engine.py, catalog/d01..d10, run.py, README.md
+│   └── swe_day/                   100 more, one folder each (001_... to 100_...): an engineer's day, run_day.py
+├── agent_app/                     UI -> FastAPI -> Deep Agents | LangGraph | ADK | Claude Agent SDK; SQL + Redis; 200 use cases
 ├── frameworks/
 │   ├── _fakes/                    lc_fake.py (ScriptedChatModel), adk_fake.py (ScriptedLlm)
 │   ├── langchain/                 01..05 + README.md
@@ -380,6 +386,17 @@ Rules of thumb:
 | Coding agent in your own service | `harness_agents/examples/*`, `services/s17_openai_codex`, `services/s18_claude_agent_sdk` |
 
 ---
+
+### The 100 Deep Agents use cases
+
+[usecases/README.md](usecases/README.md) lists all 100 with the features each one uses. The catalogue covers: filesystem 47, parallel calls 44, HITL 28, subagents 20, structured output 16, guardrails 9, todos 8, long-term memory 8, AGENTS.md 7, skills 6.
+
+```bash
+python usecases/run.py --list        # catalogue
+python usecases/run.py 92            # trip under budget: subagent research, booking approved, hotel edited cheaper
+python usecases/run.py --all         # 100/100
+python usecases/swe_day/run_day.py   # the engineer's day, 100/100 in time order
+```
 
 ## 12. Caveats
 

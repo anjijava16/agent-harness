@@ -1,6 +1,8 @@
 # Autonomous Personal AI Agents: a deep dive with runnable Python
 
-> **New:** [UpdatedREADME.md](UpdatedREADME.md) adds harness agents, open-source harnesses, and 28 runnable LangChain / LangGraph / Deep Agents / Google ADK / ADK 2.0 Workflow examples. [Understand.md](Understand.md) explains which harness each big personal agent runs on.
+> **New:** [agent_app/](agent_app/README.md) is a full-stack personal agent app: UI -> FastAPI -> Deep Agents, LangGraph, Google ADK or Claude Agent SDK (the user picks), on SQLite/Postgres/MySQL + Redis, with 200 one-folder use cases.
+>
+> [UpdatedREADME.md](UpdatedREADME.md) adds [100 Deep Agents use cases](usecases/README.md), [a software engineer's day as 100 more, one folder each](usecases/swe_day/README.md), harness agents, open-source harnesses, and 28 runnable LangChain / LangGraph / Deep Agents / Google ADK / ADK 2.0 Workflow examples. [Understand.md](Understand.md) explains which harness each big personal agent runs on.
 
 Twenty agents and agent frameworks, one shared scenario, one small harness you can read in an afternoon, and an example for each that runs offline in under a second.
 

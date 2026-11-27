@@ -1,4 +1,4 @@
-.PHONY: install install-live demo test grok clean frameworks-lc frameworks-adk harness
+.PHONY: install install-live demo test grok clean frameworks-lc frameworks-adk harness usecases swe-day agent-app
 
 install:
 	pip install -r requirements.txt
@@ -26,3 +26,12 @@ frameworks-adk:
 
 harness:
 	python harness_agents/examples/pi_style_minimal_harness.py
+
+usecases:
+	python usecases/run.py --all
+
+swe-day:
+	python usecases/swe_day/run_day.py
+
+agent-app:
+	cd agent_app && pip install -r requirements.txt && uvicorn app.api:app --reload

@@ -1,0 +1,21 @@
+# Versions this app was tested with (Python 3.11+; tested on 3.13).
+fastapi==0.165.0
+uvicorn==0.54.0
+sqlalchemy==2.1.9
+redis==8.2.0
+fakeredis==2.41.0          # in-process Redis when REDIS_URL isn't set
+psycopg[binary]==3.3.9     # Postgres
+pymysql==1.2.4             # MySQL / MariaDB
+
+deepagents==0.7.42
+langchain==1.5.2
+langgraph==1.2.24
+google-adk==2.15.1
+claude-agent-sdk==0.2.189  # bundles the claude CLI used in live mode
+
+# live mode only, pick what you use:
+# langchain-anthropic / langchain-openai   (LC_MODEL=anthropic:... or openai:...)
+# litellm                                  (ADK_MODEL=provider/model through LiteLLM)
+
+pytest
+httpx

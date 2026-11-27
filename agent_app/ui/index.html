@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Personal agent</title>
+<style>
+  :root { --bg:#f6f5f2; --card:#fff; --ink:#1d1d1b; --muted:#6b6a66; --line:#e4e2dc; --accent:#2f5d50; --warn:#a4542a; --bad:#a33; --ok:#2f6b3a; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 system-ui, -apple-system, Segoe UI, sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; flex-wrap:wrap; gap:16px; align-items:center; padding:12px 20px; border-bottom:1px solid var(--line); background:var(--card); }
+  header h1 { font-size:16px; margin:0 12px 0 0; }
+  .pills { display:flex; gap:4px; } .pills button { border:1px solid var(--line); background:#fff; padding:5px 10px; border-radius:999px; cursor:pointer; }
+  .pills button.on { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .pills button:disabled { opacity:.4; cursor:not-allowed; }
+  .muted { color:var(--muted); } .small { font-size:12px; }
+  main { display:grid; grid-template-columns: 330px 1fr 380px; gap:14px; padding:14px; height: calc(100vh - 62px); }
+  .col { background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:auto; padding:12px; }
+  input, select, textarea { font:inherit; padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:#fff; }
+  textarea { width:100%; font-family: ui-monospace, Menlo, monospace; font-size:12px; }
+  .uc { padding:8px; border-radius:6px; cursor:pointer; border:1px solid transparent; }
+  .uc:hover { background:#f1f0ec; } .uc.on { border-color:var(--accent); background:#eef3f1; }
+  .uc b { display:block; font-weight:600; }
+  .tag { display:inline-block; font-size:11px; padding:1px 6px; border-radius:4px; background:#eeece6; margin:2px 3px 0 0; }
+  .tag.appr { background:#fbe9dd; color:var(--warn); } .tag.guard { background:#f6dcdc; color:var(--bad); }
+  table { width:100%; border-collapse:collapse; } td, th { text-align:left; padding:4px 6px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-weight:600; font-size:12px; color:var(--muted); }
+  button.main { background:var(--accent); color:#fff; border:0; padding:8px 14px; border-radius:6px; cursor:pointer; font-weight:600; }
+  button.sec { background:#fff; border:1px solid var(--line); padding:6px 10px; border-radius:6px; cursor:pointer; }
+  .pending { border:1px solid #e8c6ae; background:#fff8f3; border-radius:8px; padding:10px; margin:8px 0; }
+  .status { font-weight:700; } .status.done { color:var(--ok); } .status.error { color:var(--bad); } .status.awaiting_approval { color:var(--warn); }
+  .final { background:#f3f7f5; border-left:3px solid var(--accent); padding:8px 10px; margin:8px 0; white-space:pre-wrap; }
+  code { font-family: ui-monospace, Menlo, monospace; font-size:12px; }
+  details summary { cursor:pointer; font-weight:600; margin:8px 0; }
+  .row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  @media (max-width: 1100px) { main { grid-template-columns: 1fr; height:auto; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Personal agent</h1>
+  <label class="small muted">User <input id="user" value="sam" size="8"></label>
+  <div class="pills" id="fw"></div>
+  <div class="pills" id="mode">
+    <button data-m="scripted">scripted</button><button data-m="live">live model</button>
+  </div>
+  <span class="small muted" id="health"></span>
+</header>
+<main>
+  <section class="col">
+    <div class="row"><select id="area"><option value="">All areas</option></select>
+      <input id="q" placeholder="Search" style="flex:1"></div>
+    <div id="count" class="small muted" style="margin:8px 0"></div>
+    <div id="list"></div>
+  </section>
+
+  <section class="col" id="detail"><p class="muted">Pick a use case on the left.</p></section>
+
+  <section class="col">
+    <div id="run"><p class="muted">Runs show up here.</p></div>
+    <details><summary>Preferences</summary>
+      <p class="small muted">The agent reads these. Use cases fill in placeholders like {home_city}, and guards use limits like max_purchase_without_review.</p>
+      <textarea id="prefs" rows="14"></textarea>
+      <div class="row" style="margin-top:6px"><button class="sec" onclick="savePrefs()">Save preferences</button><span id="prefsMsg" class="small muted"></span></div>
+    </details>
+    <details><summary>Long-term memory</summary><div id="mem" class="small"></div></details>
+    <details><summary>Recent runs</summary><div id="recent" class="small"></div></details>
+  </section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const api = async (path, opts={}) => {
+  const r = await fetch(path, {headers:{'content-type':'application/json'}, ...opts});
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.detail || r.statusText);
+  return body;
+};
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let state = { prefs:{}, items:[], selected:null, run:null };
+const user = () => $('#user').value.trim() || 'sam';
+
+async function boot() {
+  const h = await api('/api/health');
+  $('#health').textContent = `db: ${h.database} · ${h.redis}`;
+  const fws = await api('/api/frameworks');
+  $('#fw').innerHTML = fws.map(f => `<button data-f="${f.id}" ${f.installed?'':'disabled title="not installed"'}>${esc(f.label)}</button>`).join('');
+  $('#fw').onclick = e => e.target.dataset.f && setPref({framework: e.target.dataset.f});
+  $('#mode').onclick = e => e.target.dataset.m && setPref({mode: e.target.dataset.m});
+  const data = await api('/api/usecases');
+  $('#area').innerHTML += data.areas.map(a => `<option value="${a.id}">${esc(a.label)}</option>`).join('');
+  state.items = data.items;
+  $('#area').onchange = $('#q').oninput = renderList;
+  $('#user').onchange = loadUser;
+  renderList(); loadUser();
+}
+
+async function loadUser() {
+  state.prefs = await api(`/api/users/${user()}/preferences`);
+  document.querySelectorAll('#fw button').forEach(b => b.classList.toggle('on', b.dataset.f === state.prefs.framework));
+  document.querySelectorAll('#mode button').forEach(b => b.classList.toggle('on', b.dataset.m === state.prefs.mode));
+  $('#prefs').value = JSON.stringify(state.prefs, null, 2);
+  const mem = await api(`/api/users/${user()}/memories`);
+  $('#mem').innerHTML = Object.keys(mem).length ? '<table>' + Object.entries(mem).map(([k,v]) => `<tr><td><code>${esc(k)}</code></td><td>${esc(v)}</td></tr>`).join('') + '</table>' : '<p class="muted">Nothing saved yet.</p>';
+  const runs = await api(`/api/users/${user()}/runs`);
+  $('#recent').innerHTML = runs.map(r => `<div><a href="#" onclick="showRun('${r.id}');return false">#${r.usecase_id} ${r.framework}</a> <span class="status ${r.status}">${r.status}</span></div>`).join('') || '<p class="muted">None yet.</p>';
+  if (state.selected) select(state.selected.id);
+}
+
+async function setPref(v) { await api(`/api/users/${user()}/preferences`, {method:'PUT', body: JSON.stringify(v)}); loadUser(); }
+async function savePrefs() {
+  try { await api(`/api/users/${user()}/preferences`, {method:'PUT', body: $('#prefs').value}); $('#prefsMsg').textContent = 'Saved.'; loadUser(); }
+  catch (e) { $('#prefsMsg').textContent = e.message; }
+}
+
+function renderList() {
+  const a = $('#area').value, q = $('#q').value.toLowerCase();
+  const items = state.items.filter(u => (!a || u.area === a) && (!q || (u.title + ' ' + u.ask).toLowerCase().includes(q)));
+  $('#count').textContent = `${items.length} use cases`;
+  $('#list').innerHTML = items.map(u => `<div class="uc ${state.selected?.id===u.id?'on':''}" onclick="select(${u.id})">
+    <b>${u.id}. ${esc(u.title)}</b><span class="small muted">${esc(u.area)}</span> ${u.features.map(f => `<span class="tag">${esc(f)}</span>`).join('')}</div>`).join('');
+}
+
+async function select(id) {
+  const u = await api(`/api/usecases/${id}?user_id=${user()}`);
+  state.selected = u; renderList();
+  $('#detail').innerHTML = `<h2 style="margin-top:0">${u.id}. ${esc(u.title)}</h2>
+    <p class="muted">${esc(u.why)}</p>
+    <p><b>You ask:</b> ${esc(u.ask)}</p>
+    <table><tr><th>Tool</th><th>Effect</th><th>Control</th></tr>${u.tools.map(t => `<tr><td><code>${esc(t.name)}</code></td><td>${t.effect}</td>
+      <td>${t.approval?'<span class="tag appr">needs approval</span>':''}${t.guard?'<span class="tag guard">guard</span>':''}</td></tr>`).join('')}</table>
+    <details><summary>What the scripted model will do</summary><ol class="small">${u.steps.map(s => `<li>${s.text ? 'Answer: ' + esc(s.text) : s.calls.map(c => `<code>${esc(c.tool)}(${esc(JSON.stringify(c.args))})</code>`).join(' + ')}</li>`).join('')}</ol></details>
+    <div class="row" style="margin-top:12px">
+      <button class="main" onclick="startRun()">Run on ${esc(state.prefs.framework)}</button>
+      <label class="small"><input type="checkbox" id="auto"> auto-approve (demo)</label>
+    </div>
+    ${state.prefs.mode === 'live' ? `<p class="small muted">Live mode: a real model decides. Optional message:</p><textarea id="msg" rows="2">${esc(u.ask)}</textarea>` : ''}`;
+}
+
+async function startRun() {
+  $('#run').innerHTML = '<p class="muted">Running…</p>';
+  try {
+    const run = await api('/api/runs', {method:'POST', body: JSON.stringify({user_id:user(), usecase_id: state.selected.id, auto_approve: $('#auto').checked, message: $('#msg')?.value})});
+    renderRun(run);
+  } catch (e) { $('#run').innerHTML = `<p class="status error">${esc(e.message)}</p>`; }
+}
+
+async function showRun(id) { renderRun(await api(`/api/runs/${id}`)); }
+
+function renderRun(r) {
+  state.run = r;
+  const pend = (r.pending || []).map((p, i) => `<div class="pending"><b>Approve <code>${esc(p.tool)}</code>?</b>
+      <textarea id="args${i}" rows="4">${esc(JSON.stringify(p.args, null, 2))}</textarea>
+      <div class="row"><select id="dec${i}"><option value="approve">approve</option><option value="edit">approve with my edits</option><option value="reject">reject</option></select></div></div>`).join('');
+  $('#run').innerHTML = `<div class="row"><span class="status ${r.status}">${r.status.replace('_',' ')}</span><span class="small muted">${esc(r.framework)} · ${esc(r.mode)}</span></div>
+    ${r.error ? `<p class="status error small">${esc(r.error)}</p>` : ''}
+    ${pend ? pend + '<button class="main" onclick="sendDecisions()">Send decision</button>' : ''}
+    ${r.final ? `<div class="final">${esc(r.final)}</div>` : ''}
+    <details ${r.status==='done'?'':'open'}><summary>Tool calls (${r.tool_calls.length})</summary><table>${r.tool_calls.map(c => `<tr><td><code>${esc(c.tool)}</code><div class="small muted">${esc(JSON.stringify(c.args)).slice(0, 120)}</div></td><td class="small">${c.status}${c.note?': '+esc(c.note):''}</td></tr>`).join('')}</table></details>
+    ${r.checks.length ? `<details><summary>Checks</summary>${r.checks.map(([l, ok]) => `<div class="small">${ok?'✓':'✗'} ${esc(l)}</div>`).join('')}</details>` : ''}`;
+  if (r.status !== 'awaiting_approval') loadUser();
+}
+
+async function sendDecisions() {
+  const decisions = state.run.pending.map((p, i) => {
+    const type = $(`#dec${i}`).value;
+    return type === 'edit' ? {type, args: JSON.parse($(`#args${i}`).value)} : {type};
+  });
+  $('#run').insertAdjacentHTML('afterbegin', '<p class="muted">Resuming…</p>');
+  try { renderRun(await api(`/api/runs/${state.run.id}/decisions`, {method:'POST', body: JSON.stringify({decisions})})); }
+  catch (e) { alert(e.message); }
+}
+boot();
+</script>
+</body>
+</html>
