@@ -15,6 +15,10 @@ Core pieces
                           (approvals, guardrails, caching)
     deploy                `adk web` locally, Cloud Run, or Vertex AI Agent Engine (AdkApp)
 
+ADK 2.0 (GA May 2026) adds a graph-based Workflow runtime and deprecates SequentialAgent /
+ParallelAgent / LoopAgent in its favor. The live code below still uses SequentialAgent (it
+runs on 2.x with a DeprecationWarning); frameworks/google_adk_workflows shows the 2.0 way.
+
 This example builds a coordinator that delegates to a finance agent and a comms agent,
 with a SequentialAgent pipeline variant and a before_tool_callback approval.
 """

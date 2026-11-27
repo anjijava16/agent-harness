@@ -14,9 +14,11 @@ pages or when sensitive info is needed. In the UI it is now a Chat | Task toggle
 
 Programmability
 ---------------
-No public Gemini Task API. The Google-native way to build the same thing is the
-Agent Development Kit (google-adk) + Gemini, which the live mode uses, including ADK's
-before_tool_callback as the approval hook.
+No public Gemini Task API. Task itself runs on Google's Antigravity agent harness; the
+closest match for developers is Antigravity Managed Agents (google-genai
+client.interactions.create(agent="antigravity-...", environment="remote")), see
+Understand.md section 3.1. The live mode here uses ADK + Gemini instead, with ADK's
+before_tool_callback as the approval hook: a do-it-yourself build-alike, not what Task runs on.
 """
 
 from __future__ import annotations

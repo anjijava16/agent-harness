@@ -2,7 +2,9 @@
 
 What you get from create_deep_agent(...)
 ----------------------------------------
-* a planning tool (write_todos) so the agent keeps a todo list for long tasks
+* NOTE: since deepagents 0.7 the write_todos planner is NOT in the default harness; add it
+  with middleware=[TodoListMiddleware()] (see frameworks/deep_agents/05_*). The mock below
+  still models a todo tool, because it's a useful pattern.
 * a virtual filesystem (ls/read_file/write_file/edit_file) as working memory,
   with pluggable backends: StateBackend (default), FilesystemBackend, StoreBackend,
   CompositeBackend(routes={"/memories/": ...}) for memory that survives threads

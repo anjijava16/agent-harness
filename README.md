@@ -1,5 +1,7 @@
 # Autonomous Personal AI Agents: a deep dive with runnable Python
 
+> **New:** [UpdatedREADME.md](UpdatedREADME.md) adds harness agents, open-source harnesses, and 28 runnable LangChain / LangGraph / Deep Agents / Google ADK / ADK 2.0 Workflow examples. [Understand.md](Understand.md) explains which harness each big personal agent runs on.
+
 Twenty agents and agent frameworks, one shared scenario, one small harness you can read in an afternoon, and an example for each that runs offline in under a second.
 
 The products: **Grok Bot**, **OpenAI dots**, **Claude Duet**, **Gemini Task**, **Meta Muse**, **Copilot Cowork**, **Cue**, **OpenClaw**, **Instinct**, **Perplexity Personal Computer**, **Manus**, **Hermes Agent**, **Genspark**, **Perplexity Comet**, **Cursor**, **Devin**, **Codex**. The frameworks: the **Claude Agent SDK**, **LangChain Deep Agents** and **Google ADK**.
@@ -29,6 +31,8 @@ Written in late November 2026. Most of these products shipped between March and 
 ---
 
 ## 1. Read this first
+
+> Also read **[Understand.md](Understand.md)**: which harness each product actually runs on (Gemini Task -> Antigravity, dots -> Codex lineage, Duet -> Claude Agent SDK lineage, Grok Bot -> Cursor), and how that differs from the build-alikes here.
 
 The obvious way to build this repo was "pip install the Grok Bot SDK, call it". That doesn't work, because most of the consumer agents on this list **do not have a public API for driving the agent itself**:
 
@@ -105,7 +109,7 @@ Every example works on the same small business so you can compare them directly.
 | 01 | **Grok Bot** | SpaceXAI (xAI) + Cursor | Aug 11 2026 (beta) | Persistent cloud computer per account (Cursor cloud) | Desktop/iOS app | No Bot API. xAI API + Cursor SDK | Real `xai-sdk` Bot + optional Cursor cloud agent |
 | 02 | **dots** | OpenAI | Sep 29 2026 (DevDay) | Cloud machine | ChatGPT, Codex, Slack, Teams | None for dots | Build-alike on OpenAI Agents SDK |
 | 03 | **Claude Duet** | Anthropic | Oct 21 2026 (research preview) | Cloud computer | Duet app, claude.ai | None for Duet | Build-alike on Claude Agent SDK |
-| 04 | **Gemini Task** (was Spark) | Google | May 2026 as Spark, renamed Task in Oct/Nov | Background + remote browser | Gemini app/web, Chat/Task toggle | None for Task | Build-alike on Google ADK |
+| 04 | **Gemini Task** (was Spark) | Google | May 2026 as Spark, renamed Task in Oct/Nov | Google Cloud VMs, Antigravity harness | Gemini app/web, Chat/Task toggle | None for Task; Antigravity Managed Agents is the same harness | Build-alike on Google ADK (see Understand.md) |
 | 05 | **Muse** | Meta | Sep 8 2026 | Muse Secure VM per person | Muse app, muse.ai, WhatsApp | None | Build-alike, any OpenAI-compatible model |
 | 06 | **Copilot Cowork** | Microsoft | GA Jun 16 2026 | Inside the M365 tenant | Copilot (web/desktop/mobile) | Plugins, Copilot Studio, Agent 365 | Build-alike, works with Azure OpenAI |
 | 07 | **Cue** | Manus | Sep 28 2026 (with Manus 2.0) | A computer per agent | Cue app | No separate Cue API found | Manus v2 API |
@@ -537,7 +541,7 @@ Each folder has its own README with an architecture diagram and the mapping to c
 | 16 | `s16_devin` | One HTTP call hands work to a cloud engineer | Session with a blocking question |
 | 17 | `s17_openai_codex` | Change the sandbox per turn: plan read-only, implement, review read-only | Three-turn pattern |
 | 18 | `s18_claude_agent_sdk` | Subagents, hooks and permission callbacks | Two subagents, hook blocks a gmail copy |
-| 19 | `s19_langchain_deep_agents` | Todos, a virtual filesystem, subagents, `interrupt_on` | Todo list, `/memories/` file, approval pause |
+| 19 | `s19_langchain_deep_agents` | A virtual filesystem, subagents, `interrupt_on` (todos are opt-in since 0.7) | Todo list (opt-in pattern), `/memories/` file, approval pause |
 | 20 | `s20_google_adk` | Workflow agents pass data through `session.state` | SequentialAgent, `output_key`, `before_tool_callback` |
 
 ### Sequence diagrams for the most distinctive designs

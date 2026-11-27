@@ -141,13 +141,13 @@ S["s07_manus_cue"] = dict(
     api="""No separate public Cue API was documented at launch; live mode sends the work to the **Manus v2 API** (`s11`) with identity rules in the task.""",
     diagram="""flowchart LR
     subgraph Cole[Agent Cole]
-      E1[cole@agents...]
-      P1[+1 phone]
-      W1[wallet $0]
+      E1["cole@agents.cue.im"]
+      P1["+1 phone"]
+      W1["wallet $0"]
     end
     subgraph Ezra[Agent Ezra]
-      E2[ezra@agents...]
-      W2[wallet $50]
+      E2["ezra@agents.cue.im"]
+      W2["wallet $50"]
     end
     Cole --> GC[[Group chat]]
     Ezra --> GC
@@ -347,7 +347,7 @@ S["s18_claude_agent_sdk"] = dict(
 
 S["s19_langchain_deep_agents"] = dict(
     title="19 - LangChain Deep Agents", file="deep_agent.py",
-    what="""An opinionated harness on LangGraph: a todo/planning tool, a virtual filesystem with pluggable backends, subagents through a task tool, skills and memory files, and human-in-the-loop interrupts. Model-agnostic.""",
+    what="""An opinionated harness on LangGraph: a virtual filesystem with pluggable backends, subagents through a task tool, summarization, skills and memory files, and human-in-the-loop interrupts. Model-agnostic. **Since 0.7 the `write_todos` planner is no longer in the default harness**; add `TodoListMiddleware()` if you want it. Much more in [frameworks/deep_agents](../../frameworks/deep_agents/README.md).""",
     api="""`create_deep_agent(model, tools, system_prompt, subagents=[{name, description, system_prompt, tools, model}], interrupt_on={...}, checkpointer=..., backend=..., skills=[...], memory=[...])`. Resume an interrupt with `Command(resume={"decisions": [{"type": "approve"}]})`.""",
     diagram="""flowchart LR
     U[User] --> A[Deep agent]
@@ -356,7 +356,7 @@ S["s19_langchain_deep_agents"] = dict(
     A -->|task| SA[researcher subagent]
     A --> I{interrupt_on<br/>send_email}
     I --> H((You))""",
-    mapping=[("Todos", "`write_todos` tool"),
+    mapping=[("Todos", "`write_todos` tool (a pattern; opt-in via TodoListMiddleware in 0.7+)"),
              ("Virtual FS", "`SandboxComputer` as the filesystem; `/memories/` path"),
              ("Subagent", "`task` tool spawning a fresh agent"),
              ("interrupt_on", "approval on `send_email`; live code loops on `__interrupt__`")],
@@ -365,7 +365,7 @@ S["s19_langchain_deep_agents"] = dict(
 
 S["s20_google_adk"] = dict(
     title="20 - Google Agent Development Kit (ADK)", file="adk_agent.py",
-    what="""Google's framework for multi-agent systems: `Agent`/`LlmAgent`, workflow agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`), a `Runner` that yields Events, session services, shared `session.state` (an agent's `output_key` writes there), and before/after model and tool callbacks. Deploy with `adk web`, Cloud Run or Vertex AI Agent Engine.""",
+    what="""Google's framework for multi-agent systems: `Agent`/`LlmAgent`, workflow agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`), a `Runner` that yields Events, session services, shared `session.state` (an agent's `output_key` writes there), and before/after model and tool callbacks. Deploy with `adk web`, Cloud Run or Vertex AI Agent Engine. **ADK 2.0** (GA May 19 2026) turned ADK into a graph engine: `Workflow` with edges, routing, fan-out/join, retries, dynamic nodes and durable human-in-the-loop, and deprecated the classic Sequential/Parallel/Loop agents. See [frameworks/google_adk_workflows](../../frameworks/google_adk_workflows/README.md).""",
     api="""`pip install google-adk`; Gemini via `GOOGLE_API_KEY` or Vertex AI.""",
     diagram="""flowchart LR
     U[User] --> SEQ[SequentialAgent]

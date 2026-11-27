@@ -14,9 +14,9 @@ Architecture notes (from OpenAI's launch material and press coverage, Sep-Oct 20
 
 Programmability
 ---------------
-There is no public dots API. The closest official building blocks are the OpenAI
-Agents SDK (pip install openai-agents) plus the Responses API, which is what the live
-mode below uses to rebuild the two-mode design: a read-only "background" dot and an
+There is no public dots API. dots grew out of OpenAI's coding agents, so the closest
+harness is Codex (app-server / openai-codex, see s17 and Understand.md 3.3). The live mode
+below uses the lighter OpenAI Agents SDK (pip install openai-agents) to rebuild the two-mode design: a read-only "background" dot and an
 approval-gated "foreground" dot.
 """
 

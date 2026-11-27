@@ -1,0 +1,8 @@
+# LangChain / LangGraph / Deep Agents examples (frameworks/langchain, langgraph, deep_agents)
+# Checked Nov 2026 with: langchain 1.5.2, langchain-core 1.8.5, langgraph 1.2.24, deepagents 0.7.42
+# Deep Agents needs Python 3.11+. Use a separate venv from the ADK one.
+langchain>=1.4
+langgraph>=1.2
+deepagents>=0.7
+# for --live, add the provider you use, e.g.:
+# langchain-anthropic   langchain-openai   langchain-google-genai   langchain-mcp-adapters

@@ -2,7 +2,7 @@
 
 ## What it is
 
-An opinionated harness on LangGraph: a todo/planning tool, a virtual filesystem with pluggable backends, subagents through a task tool, skills and memory files, and human-in-the-loop interrupts. Model-agnostic.
+An opinionated harness on LangGraph: a virtual filesystem with pluggable backends, subagents through a task tool, summarization, skills and memory files, and human-in-the-loop interrupts. Model-agnostic. **Since 0.7 the `write_todos` planner is no longer in the default harness**; add `TodoListMiddleware()` if you want it. Much more in [frameworks/deep_agents](../../frameworks/deep_agents/README.md).
 
 ## What you can program
 
@@ -24,7 +24,7 @@ flowchart LR
 
 | Concept | In `deep_agent.py` |
 |---|---|
-| Todos | `write_todos` tool |
+| Todos | `write_todos` tool (a pattern; opt-in via TodoListMiddleware in 0.7+) |
 | Virtual FS | `SandboxComputer` as the filesystem; `/memories/` path |
 | Subagent | `task` tool spawning a fresh agent |
 | interrupt_on | approval on `send_email`; live code loops on `__interrupt__` |

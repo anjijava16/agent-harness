@@ -13,13 +13,13 @@ No separate public Cue API was documented at launch; live mode sends the work to
 ```mermaid
 flowchart LR
     subgraph Cole[Agent Cole]
-      E1[cole@agents...]
-      P1[+1 phone]
-      W1[wallet $0]
+      E1["cole@agents.cue.im"]
+      P1["+1 phone"]
+      W1["wallet $0"]
     end
     subgraph Ezra[Agent Ezra]
-      E2[ezra@agents...]
-      W2[wallet $50]
+      E2["ezra@agents.cue.im"]
+      W2["wallet $50"]
     end
     Cole --> GC[[Group chat]]
     Ezra --> GC

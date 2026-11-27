@@ -2,7 +2,7 @@
 
 ## What it is
 
-Google's framework for multi-agent systems: `Agent`/`LlmAgent`, workflow agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`), a `Runner` that yields Events, session services, shared `session.state` (an agent's `output_key` writes there), and before/after model and tool callbacks. Deploy with `adk web`, Cloud Run or Vertex AI Agent Engine.
+Google's framework for multi-agent systems: `Agent`/`LlmAgent`, workflow agents (`SequentialAgent`, `ParallelAgent`, `LoopAgent`), a `Runner` that yields Events, session services, shared `session.state` (an agent's `output_key` writes there), and before/after model and tool callbacks. Deploy with `adk web`, Cloud Run or Vertex AI Agent Engine. **ADK 2.0** (GA May 19 2026) turned ADK into a graph engine: `Workflow` with edges, routing, fan-out/join, retries, dynamic nodes and durable human-in-the-loop, and deprecated the classic Sequential/Parallel/Loop agents. See [frameworks/google_adk_workflows](../../frameworks/google_adk_workflows/README.md).
 
 ## What you can program
 

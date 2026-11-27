@@ -1,0 +1,5 @@
+# Google ADK examples (frameworks/google_adk, frameworks/google_adk_workflows)
+# Checked Nov 2026 with google-adk 2.15.1, google-genai 2.34.0. Use a separate venv.
+google-adk>=2.0
+# optional: MCP toolsets
+# mcp
