@@ -343,7 +343,7 @@ def run(uc: UseCase, verbose: bool = False) -> Result:
     checks = []
     if "--live" not in sys.argv:
         planned = [tc["name"] for m in uc.plan for tc in (m.tool_calls or [])
-                   if tc["name"] not in {"task", "write_todos", "write_file", "read_file", "edit_file", "ls"}
+                   if tc["name"] not in {"task", "write_todos", "write_file", "read_file", "edit_file", "ls", "grep", "glob"}
                    and (not uc.output or tc["name"] != uc.output[0])]
         executed = [c[0] for c in world.calls]
         missing = [n for n in planned if n not in executed and n not in world.rejected

@@ -16,6 +16,10 @@ python usecases/run.py --all                        # all 100 + checks (expect 1
 LC_MODEL=anthropic:claude-sonnet-4-6 python usecases/run.py 22 --live   # a real model; approvals asked in the terminal
 ```
 
+> **Also here:** [swe_day/](swe_day/README.md) has 100 more, one folder each, covering a software
+> engineer's day from 06:30 to midnight (cron and webhook automations, code review, incidents, releases,
+> overnight jobs). Run them with `python usecases/swe_day/run_day.py`.
+
 ## How a use case is defined
 
 A use case is data, not a script. `usecases/engine.py` turns it into a Deep Agent:
